@@ -23,10 +23,15 @@ TestPluginAudioProcessor::TestPluginAudioProcessor()
                        ), treeState(*this, nullptr, "PARAMETERS", createParameterLayout())
 #endif
 {
+    // Penser à mettre le listener ici !
+    treeState.addParameterListener("gain", this);
+    treeState.addParameterListener("test", this);
 }
 
 TestPluginAudioProcessor::~TestPluginAudioProcessor()
 {
+    treeState.removeParameterListener("gain", this);
+    treeState.removeParameterListener("test", this);
 }
 
 
@@ -36,12 +41,32 @@ juce::AudioProcessorValueTreeState::ParameterLayout TestPluginAudioProcessor::cr
     
     std::vector <std::unique_ptr<juce::RangedAudioParameter>> params;
     
+    // Ici on crée les différents paramètres du ParameterLayout
     auto pGain = std::make_unique<juce::AudioParameterFloat>("gain", "Gain", -24.0, 24.0, 10.0);
-
+    auto pTest = std::make_unique<juce::AudioParameterInt>("test", "Test", -10, 10, 0);
+    
     
     params.push_back(std::move(pGain));
+    params.push_back(std::move(pTest));
     
     return {params.begin(), params.end()};
+}
+
+
+// MÉTHODE POUR NE METTRE À JOUR LES VALEURS QUE QUAND ELLES CHANGENT
+void TestPluginAudioProcessor::parameterChanged(const juce::String &parameterID, float newValue) {
+    
+    // Quand une nouvelle valeur est détectée dans le listener, newValue prend cette valeur
+    // et on sait quel paramètre est concerné avec parameterID.
+
+    if (parameterID == "gain") {
+        rawGain = juce::Decibels::decibelsToGain(newValue);
+        //DBG("Gain is :" << newValue);
+    }
+    if (parameterID == "test") {
+        val_test = newValue;
+        //DBG("Test vaut :" << newValue);
+    }
 }
 
 
@@ -110,8 +135,8 @@ void TestPluginAudioProcessor::changeProgramName (int index, const juce::String&
 //==============================================================================
 void TestPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
+    rawGain = juce::Decibels::decibelsToGain(static_cast<float>(*treeState.getRawParameterValue("gain")));
+    val_test = *treeState.getRawParameterValue("test");
 }
 
 void TestPluginAudioProcessor::releaseResources()
@@ -159,20 +184,14 @@ void TestPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     // when they first compile a plugin, but obviously you don't need to keep
     // this code if your algorithm always overwrites all the output channels.
     
-    
-    
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
-    
-    float dbGain = *treeState.getRawParameterValue("gain");
-    float rawGain = juce::Decibels::decibelsToGain(dbGain);
     
     // BLOC POUR BOUCLER SUR LE BUFFER
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
         auto* channelData = buffer.getWritePointer (channel);
       
-        
         for (int sample=0; sample < buffer.getNumSamples(); sample++) {
             
             channelData[sample] *= rawGain;
@@ -191,20 +210,25 @@ bool TestPluginAudioProcessor::hasEditor() const
 juce::AudioProcessorEditor* TestPluginAudioProcessor::createEditor()
 {
     return new TestPluginAudioProcessorEditor (*this);
+    // Éditor qui se base sur ce qu'on a dans le layout : permet de modifier les valeurs avec des sliders ou autres directement
+    //return new juce::GenericAudioProcessorEditor(*this);
 }
 
 //==============================================================================
-void TestPluginAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
-{
-    // You should use this method to store your parameters in the memory block.
-    // You could do that either as raw data, or use the XML or ValueTree classes
-    // as intermediaries to make it easy to save and load complex data.
+void TestPluginAudioProcessor::getStateInformation (juce::MemoryBlock& destData) {
+    // Save parameters
+    juce::MemoryOutputStream stream(destData, false);
+    treeState.state.writeToStream(stream);
 }
 
-void TestPluginAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
-{
-    // You should use this method to restore your parameters from this memory block,
-    // whose contents will have been created by the getStateInformation() call.
+void TestPluginAudioProcessor::setStateInformation (const void* data, int sizeInBytes) {
+    // Recall parameters
+    auto tree = juce::ValueTree::readFromData(data, size_t(sizeInBytes));
+    if (tree.isValid()) {
+        treeState.state = tree;
+        rawGain = juce::Decibels::decibelsToGain(static_cast<float>(*treeState.getRawParameterValue("gain")));
+        val_test = *treeState.getRawParameterValue("test");
+    }
 }
 
 //==============================================================================

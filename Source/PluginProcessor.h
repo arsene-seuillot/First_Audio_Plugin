@@ -13,7 +13,7 @@
 //==============================================================================
 /**
 */
-class TestPluginAudioProcessor  : public juce::AudioProcessor
+class TestPluginAudioProcessor  : public juce::AudioProcessor, juce::AudioProcessorValueTreeState::Listener
 {
 public:
     //==============================================================================
@@ -59,8 +59,12 @@ public:
 
 private:
     
+    float rawGain = 1.0;
+    int val_test = 0;
+    
     // LE VALUE-TREE A BESOIN D'UN PARAMETER LAYOUT. C'EST CE QUE CONTIENT L'ABRE DE VALEURS. -> IL FAUT L'INITIALISER
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+    void parameterChanged(const juce::String &ParameterID, float newValue) override;
     
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TestPluginAudioProcessor)
