@@ -30,6 +30,7 @@ private:
     TestPluginAudioProcessor& audioProcessor;
     
     juce::Slider fader;
+    // initialisation de l'attache du fader
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> faderAttachment;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TestPluginAudioProcessorEditor)

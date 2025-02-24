@@ -23,8 +23,8 @@ TestPluginAudioProcessorEditor::TestPluginAudioProcessorEditor (TestPluginAudioP
     fader.setColour(juce::Slider::ColourIds::trackColourId, juce::Colours::whitesmoke);
     fader.setDoubleClickReturnValue(true, 0.0);
     
-    faderAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-            audioProcessor.treeState, "gain", fader);
+    // On attache le fader au paramètre "gain" de treeState.
+    faderAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, "gain", fader);
     
     // On peut changer la taille de la fenêtre, avec un ratio particulier
     setResizable(true, true);
