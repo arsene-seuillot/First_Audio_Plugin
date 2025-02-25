@@ -11,10 +11,10 @@
 
 //==============================================================================
 TestPluginAudioProcessorEditor::TestPluginAudioProcessorEditor (TestPluginAudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p)
+: AudioProcessorEditor (&p), audioProcessor (p), waveformDisplay(p)
 {
     // C'est ici qu'on met les composants et qu'on gère leur style
-    
+    addAndMakeVisible(waveformDisplay);
     addAndMakeVisible(fader);
     fader.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
     // La taille de la boite de texte ne dépassera pas la taille totale du composant !
@@ -29,7 +29,7 @@ TestPluginAudioProcessorEditor::TestPluginAudioProcessorEditor (TestPluginAudioP
     // On peut changer la taille de la fenêtre, avec un ratio particulier
     setResizable(true, true);
     setResizeLimits(500, 250, 1500, 750);
-    getConstrainer()->setFixedAspectRatio(2.0);
+    getConstrainer()->setFixedAspectRatio(1.618);
     
     setSize (1000, 500);
 }
@@ -43,7 +43,7 @@ void TestPluginAudioProcessorEditor::paint (juce::Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll(juce::Colours::black.brighter(0.1).withAlpha(0.5f));
-
+    
     g.setColour (juce::Colours::whitesmoke);
     g.setFont (juce::FontOptions (15.0f));
     g.drawFittedText ("Ceci est un test.", getLocalBounds(), juce::Justification::centred, 1);
@@ -55,5 +55,6 @@ void TestPluginAudioProcessorEditor::resized() {
     auto leftMargin = getWidth()*0.02;
     auto topMargin = getHeight()*0.04;
     auto faderSize = getWidth()*0.05;
-    fader.setBounds(leftMargin, topMargin, faderSize, 5*faderSize);
+    fader.setBounds(40, 160, faderSize, 5*faderSize);
+    waveformDisplay.setBounds(0, 0, getWidth(), 150);
 }

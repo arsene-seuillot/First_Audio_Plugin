@@ -56,6 +56,9 @@ public:
     
     // DÉCLARATION DU VALUE-TREE
     juce::AudioProcessorValueTreeState treeState;
+    
+    // Stocke l'audio pour l'affichage
+    juce::AudioBuffer<float> waveformBuffer;
 
 private:
     
